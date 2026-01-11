@@ -1,0 +1,69 @@
+name: Mumbai Event Scanner
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      notify:
+        description: 'Send Telegram notification'
+        required: false
+        default: 'true'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Tesseract OCR
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr libtesseract-dev
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install playwright-stealth
+
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      - name: Run Event Scanner
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CI: 'true'
+        run: python run_scan.py
+
+      - name: Generate Dashboard
+        run: python generate_dashboard.py
+
+      - name: Upload Dashboard Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard
+          path: |
+            dashboard_live.html
+            events.db
+          retention-days: 7
+
+      - name: Upload to GitHub Pages (optional)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          keep_files: false
+          include_files: dashboard_live.html
