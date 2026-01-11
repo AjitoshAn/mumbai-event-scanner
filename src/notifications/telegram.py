@@ -1,7 +1,7 @@
 import os
 import logging
 import aiohttp
-from typing import List
+from typing import List, Optional
 
 class TelegramNotifier:
     """
@@ -15,10 +15,10 @@ class TelegramNotifier:
        - TELEGRAM_CHAT_ID
     """
     
-    def __init__(self):
+    def __init__(self, bot_token: Optional[str] = None, chat_id: Optional[str] = None):
         self.logger = logging.getLogger("notifications.telegram")
-        self.bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-        self.chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+        self.bot_token = bot_token or os.environ.get("TELEGRAM_BOT_TOKEN")
+        self.chat_id = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
         
         if not self.bot_token or not self.chat_id:
             self.logger.warning("Telegram credentials not set. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID env vars.")
@@ -99,6 +99,41 @@ class TelegramNotifier:
         
         return await self.send_message(message)
 
+    # Individual notification methods for run_scan.py compatibility
+    async def send_new_event_notification(self, event) -> bool:
+        """Send notification for a single new event."""
+        message = f"🎫 <b>New Event!</b>\n\n"
+        message += f"<b>{event.title}</b>\n"
+        message += f"📍 {event.venue}\n"
+        message += f"📅 {event.date}\n"
+        message += f"💰 {event.price}\n"
+        message += f"🔗 {event.url}"
+        return await self.send_message(message)
+
+    async def send_price_change_notification(self, title: str, old_price: str, new_price: str, url: str) -> bool:
+        """Send notification for a price change."""
+        message = f"💰 <b>Price Change!</b>\n\n"
+        message += f"<b>{title}</b>\n"
+        message += f"{old_price} → {new_price}\n"
+        message += f"🔗 {url}"
+        return await self.send_message(message)
+
+    async def send_status_change_notification(self, title: str, old_status: str, new_status: str, url: str) -> bool:
+        """Send notification for ticket status change."""
+        message = f"🔥 <b>Tickets Now Available!</b>\n\n"
+        message += f"<b>{title}</b>\n"
+        message += f"{old_status} → {new_status}\n"
+        message += f"🔗 {url}"
+        return await self.send_message(message)
+
+    async def send_summary(self, total_events: int, new_events: int, price_changes: int) -> bool:
+        """Send scan summary."""
+        message = f"📊 <b>Scan Complete!</b>\n\n"
+        message += f"🆕 New events: {new_events}\n"
+        message += f"💰 Price changes: {price_changes}\n"
+        message += f"📈 Total updates: {total_events}"
+        return await self.send_message(message)
+
 
 if __name__ == "__main__":
     import asyncio
@@ -111,3 +146,4 @@ if __name__ == "__main__":
         print(f"Message sent: {result}")
     else:
         print("Telegram not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID env variables.")
+
