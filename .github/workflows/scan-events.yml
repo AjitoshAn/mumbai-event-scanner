@@ -11,6 +11,11 @@ on:
         required: false
         default: 'true'
 
+# Required for GitHub Pages deployment
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -45,6 +50,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           CI: 'true'
         run: python run_scan.py
+        continue-on-error: true
 
       - name: Generate Dashboard
         run: python generate_dashboard.py
@@ -58,7 +64,8 @@ jobs:
             events.db
           retention-days: 7
 
-      - name: Upload to GitHub Pages (optional)
+      # GitHub Pages deployment (optional - may fail if not configured)
+      - name: Upload to GitHub Pages
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -66,4 +73,5 @@ jobs:
           publish_dir: ./
           publish_branch: gh-pages
           keep_files: false
-          include_files: dashboard_live.html
+          force_orphan: true
+        continue-on-error: true
