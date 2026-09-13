@@ -1,0 +1,41 @@
+# Dependencies
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Database
+*.db
+
+# Debug files
+*.html
+!indian_dashboard.html
+!dashboard_live.html
+*.png
+*.log
+
+# Temp
+/tmp/
+bms_cards/
+card_screenshots/
+
+# Environment
+.env
+.env.sh
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
