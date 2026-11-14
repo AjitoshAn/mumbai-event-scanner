@@ -1,0 +1,11 @@
+playwright
+aiohttp
+beautifulsoup4
+rich
+python-dateutil
+flask
+aiohttp
+certifi
+pytesseract
+pillow
+playwright-stealth
